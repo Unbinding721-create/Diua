@@ -1,2 +1,2 @@
-# Diua
-Spirit of the flesh
+# Flutter App
+A minimal Flutter project structure ready to upload to GitHub.
