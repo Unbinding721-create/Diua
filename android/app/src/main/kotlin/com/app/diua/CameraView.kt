@@ -11,12 +11,12 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
 import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
-import androidx.camera.core.resolutionselector.ResolutionSelector // Fixed: Correct class name (was Resolutionselector)
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.constraintlayout.widget.ConstraintLayout // Fixed: Correct class name (was Constraintlayout)
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat // Fixed: Correct import (was androidx.core.content.androidx.core.content.ContextCompat)
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -29,23 +29,21 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import androidx.camera.core.ImageProxy
 
-// Fixed: The class must implement all abstract members of GestureRecognizerHelper.GestureRecognizerListener
 class CameraView(
-    private val context: Context,
+    private val context: Context, 
     messenger: BinaryMessenger,
     id: Int,
     creationParams: Map<String?, Any?>?,
     private val activity: FlutterActivity
 ) : PlatformView, GestureRecognizerHelper.GestureRecognizerListener, LifecycleEventObserver {
 
-    private var constraintLayout = ConstraintLayout(context) // Fixed: Use corrected ConstraintLayout class
+    private var constraintLayout = ConstraintLayout(context)
     private var viewFinder = PreviewView(context)
     private var overlayView: OverlayView = OverlayView(context, null)
 
     private var backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var cameraFacing = CameraSelector.LENS_FACING_FRONT
     
-    // Fixed: Correct property declaration with nullable type and initialization
     private var imageAnalyzer: ImageAnalysis? = null
     private var preview: Preview? = null
     private var camera: Camera? = null
@@ -63,36 +61,37 @@ class CameraView(
 
 
     init {
-        // ... (Layout initialization block is mostly fine) ...
-
         val layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        // Fixed: Correct way to set layoutParams in Kotlin
         constraintLayout.layoutParams = layoutParams 
 
         val constraintSet = ConstraintSet()
-        // Fixed: Overload resolution ambiguity - should clone the layout directly
         constraintSet.clone(constraintLayout) 
 
         viewFinder.id = View.generateViewId()
         viewFinder.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
         constraintLayout.addView(viewFinder)
         
-        // Fixed: Correct ConstraintSet method names (was constraintWidth/Height)
+        constraintSet.connect(viewFinder.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        constraintSet.connect(viewFinder.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        constraintSet.connect(viewFinder.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        constraintSet.connect(viewFinder.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        
         constraintSet.constrainWidth(viewFinder.id, ConstraintSet.MATCH_CONSTRAINT)
         constraintSet.constrainHeight(viewFinder.id, ConstraintSet.MATCH_CONSTRAINT)
-        
-        // ... (rest of viewFinder connections are fine) ...
 
         overlayView.id = View.generateViewId()
         constraintLayout.addView(overlayView)
-        // Fixed: Correct ConstraintSet method names for overlayView
+
+        constraintSet.connect(overlayView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        constraintSet.connect(overlayView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        constraintSet.connect(overlayView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        constraintSet.connect(overlayView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        
         constraintSet.constrainWidth(overlayView.id, ConstraintSet.MATCH_CONSTRAINT) 
         constraintSet.constrainHeight(overlayView.id, ConstraintSet.MATCH_CONSTRAINT)
-        
-        // ... (rest of overlayView connections are fine) ...
         
         constraintLayout.bringChildToFront(overlayView)
         constraintSet.applyTo(constraintLayout)
@@ -115,23 +114,20 @@ class CameraView(
     }
 
     override fun dispose() {
-        // Fixed: Should shut down the background executor on dispose
         backgroundExecutor.shutdownNow() 
     }
 
     private fun setUpCamera() {
+        Log.i("DiuaCamera", "Attempting to get CameraProvider.") // 💡 Log added
         val cameraProviderFuture =
             ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener(
             {
-                // cameraProvider
                 cameraProvider = cameraProviderFuture.get()
-
-                // build and blind the camera use cases
+                Log.i("DiuaCamera", "CameraProvider received. Binding use cases.") // 💡 Log added
                 bindCameraUseCases()
-                // its in the fuking name
             },
-            ContextCompat.getMainExecutor(context) // Fixed: ContextCompat must be imported correctly
+            ContextCompat.getMainExecutor(context)
         )
     }
 
@@ -144,78 +140,64 @@ class CameraView(
         val aspectRatioStrategy = AspectRatioStrategy(
             AspectRatio.RATIO_16_9, AspectRatioStrategy.FALLBACK_RULE_NONE
         )
-        // Fixed: Correct class name (ResolutionSelector)
         val resolutionSelector = ResolutionSelector.Builder() 
             .setAspectRatioStrategy(aspectRatioStrategy)
             .build()
 
-        // camera provider 
         val cameraProvider =
             cameraProvider
                 ?: throw IllegalStateException("Camera Initialization failed.")
 
-        // camera selector 
         val cameraSelector = 
             CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_FRONT).build()
         
-        // Preview. using the 4:3
         preview =
             Preview.Builder()
-                .setResolutionSelector(resolutionSelector) // Fixed: Correct variable name (was resolutionSelector)
+                .setResolutionSelector(resolutionSelector)
                 .setTargetRotation(viewFinder.display.rotation)
                 .build()
 
-        // ImageAnalysis using RGBA 8888 because it said so
         imageAnalyzer =
             ImageAnalysis.Builder()
-                .setResolutionSelector(resolutionSelector) // Fixed: Correct variable name (was resolutionSelector)
+                .setResolutionSelector(resolutionSelector)
                 .setTargetRotation(viewFinder.display.rotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
-                // Then assign the analyzer to the instance
                 .also {
-                    // Fixed: Correct Kotlin lambda syntax (was "image —>")
                     it.setAnalyzer(backgroundExecutor) { image -> 
                         recognizeHand(image)
                     }
                 }
 
-
-        // Unbind the use cases before rebinding them
         cameraProvider.unbindAll()
 
         try {
-            // idk what to comment
-            // Fixed: Pass the FlutterActivity instance for the LifecycleOwner
             camera = cameraProvider.bindToLifecycle(
-                activity as LifecycleOwner, // Cast activity to LifecycleOwner
+                activity as LifecycleOwner,
                 cameraSelector,
                 preview,
                 imageAnalyzer
             )
 
-            // attach the view finder surface provider to prreview use case
             preview?.surfaceProvider = viewFinder.surfaceProvider
+            Log.i("DiuaCamera", "Camera bound and surface attached.") // 💡 Log added
         } catch (exc: Exception) {
             Log.e("TAG", "Use case binding failed, lol", exc)
         }
     }
 
     private fun recognizeHand(imageProxy: ImageProxy) {
-        // Fixed: Pass the actual ImageProxy object, not the class name
         gestureRecognizerHelper.recognizeLiveStream(
             imageProxy = imageProxy, 
         )
     }
 
-    // Fixed: Remove extra 'fin', use 'fun', and ensure it implements the abstract member
     override fun onError(error: String, errorCode: Int) { 
-        Log.i("Erroris", error) // Fixed: Use Log.i() from android.util.Log
+        Log.i("Erroris", error)
     }
 
-    // Fixed: Correct function signature to match the interface, remove 'fin'
     override fun onResults(resultBundle: GestureRecognizerHelper.ResultBundle) { 
         overlayView.setResults(
             resultBundle.results.first(),
@@ -223,7 +205,7 @@ class CameraView(
             resultBundle.inputImageWidth,
             RunningMode.LIVE_STREAM
         )
-        overlayView.invalidate() // This is correct, it forces the view to redraw
+        overlayView.invalidate()
     }
 
     override fun onStateChanged(
@@ -231,7 +213,6 @@ class CameraView(
         event: Lifecycle.Event
     ) {
         when (event) {
-            // Fixed: Use '->' for Kotlin's when statement branches
             Lifecycle.Event.ON_RESUME -> { 
                 backgroundExecutor.execute {
                     if (gestureRecognizerHelper.isClosed()) {
@@ -242,7 +223,6 @@ class CameraView(
 
             Lifecycle.Event.ON_PAUSE -> {
                 if (this::gestureRecognizerHelper.isInitialized) {
-                    //close gesture recognizer helper 
                     backgroundExecutor.execute { gestureRecognizerHelper.clearGestureRecognizer() }
                 }
             }
@@ -262,5 +242,3 @@ class CameraView(
         }
     }
 }
-
-// Fixed: Remove trailing extra braces/code
