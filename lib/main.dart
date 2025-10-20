@@ -1,79 +1,89 @@
-import 'dart.io';
-
-import 'package/Diua/camera_view.dart';
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:diua/camera_view.dart';
+
+const MethodChannel _cameraPermissionChannel = MethodChannel('camera_permission');
 
 void main() {
-  runApp(const MyApp());
+  runApp(MaterialApp(
+    title: 'Diua',
+    theme: ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      useMaterial3: true,
+    ),
+    home: const Homepage(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Diua',
-      theme: ThemeData(
-        //nothing here
-
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deeppurple)
-        useMaterial3: true,
-      ),
-      home: const (
-        appBar: AppBar(title: const Text('Hello Flutter')),
-        body: const Center(child: Text('Welcome to Flutter on GitHub Web!')),
-      ),
-    );
-  }
-}
-
-class Homepage extends StatelessWidget {
-  const Homepage{{super.key}};
+class Homepage extends StatefulWidget {
+  const Homepage({super.key});
 
   @override
   State<Homepage> createState() => _HomepageState();
 }
 
 class _HomepageState extends State<Homepage> {
-  var isPermissionGranted = Platform.isAndroid ? false : true;
-  static const cameraPermission = MethodChannel("camera_permission");
+  bool? isPermissionGranted;
 
   @override
-
   void initState() {
     super.initState();
-    if (Platform.isAndroid) {
-      _getCameraPermission();
-    }
+    _checkPermission();
   }
 
-  Future<void> _getCameraPermission() async {
+  Future<void> _checkPermission() async {
     try {
-      final bool result = await camera_Permission.invokeMethod(
-        'getCameraPermission',
-      );
-      if (result) {
+      if (Platform.isAndroid) {
+        final bool result =
+            await _cameraPermissionChannel.invokeMethod<bool>('checkCameraPermission') ?? false;
+        setState(() {
+          isPermissionGranted = result;
+        });
+      } else {
+        // iOS or other platforms — assume true or implement platform checks
         setState(() {
           isPermissionGranted = true;
         });
-      } else {
-        debugPrint("Camera permission deniyd")
       }
     } on PlatformException catch (e) {
-      debugPrint("Failed to get biometric: '${e.message}'.");
+      debugPrint('Platform error while checking camera permission: $e');
+      setState(() {
+        isPermissionGranted = false;
+      });
+    }
+  }
+
+  Future<void> _requestPermission() async {
+    try {
+      final bool result =
+          await _cameraPermissionChannel.invokeMethod<bool>('requestCameraPermission') ?? false;
+      setState(() {
+        isPermissionGranted = result;
+      });
+    } on PlatformException catch (e) {
+      debugPrint('Platform error while requesting camera permission: $e');
     }
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
+    if (isPermissionGranted == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      body: isPermissionGranted
-          ? SafeArea(child: const CameraView())
-          : const SafeArea(child: Text("Give camera perwison pwease")),
-    ); //Scaffold
+      appBar: AppBar(title: const Text('Hello Flutter')),
+      body: isPermissionGranted!
+          ? SafeArea(child: CameraView())
+          : Center(
+              child: ElevatedButton(
+                onPressed: _requestPermission,
+                child: const Text('Request Camera Permission'),
+              ),
+            ),
+    );
   }
 }
