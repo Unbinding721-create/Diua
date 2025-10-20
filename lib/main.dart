@@ -5,6 +5,7 @@ import 'package:diua/camera_view.dart';
 
 const MethodChannel _cameraPermissionChannel = MethodChannel('camera_permission');
 const MethodChannel _debugChannel = MethodChannel('diua_debug');
+const MethodChannel _loggingChannel = MethodChannel('diua_logging');
 
 void main() {
   runApp(MaterialApp(
@@ -31,7 +32,7 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
-    _requestPermission();
+    _bootstrapPermissionsAndLogging();
     _debugChannel.setMethodCallHandler(_handleDebugMessage);
   }
 
@@ -53,29 +54,33 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
-  Future<void> _requestPermission() async {
-    const methodName = 'getCameraPermission'; 
-    
+  Future<void> _bootstrapPermissionsAndLogging() async {
     try {
       if (Platform.isAndroid) {
-        // Calling this will trigger the Kotlin code to check, and if needed, request permissions.
+        // 1) Request storage permission first (no-op on Android 10+)
+        await _loggingChannel.invokeMethod<bool>('requestStoragePermission');
+
+        // 2) Ask user where to put the log file (CreateDocument)
+        final logUri = await _loggingChannel.invokeMethod<String>('pickLogFile');
+
+        if (logUri != null && logUri.isNotEmpty) {
+          await _loggingChannel.invokeMethod('writeLogLine', 'Log file selected: $logUri');
+        }
+
+        // 3) Now request camera permission
+        const methodName = 'getCameraPermission';
         final bool result =
             await _cameraPermissionChannel.invokeMethod<bool>(methodName) ?? false;
-        
+
         setState(() {
           isPermissionGranted = result;
         });
-
       } else {
-        setState(() {
-          isPermissionGranted = true;
-        });
+        setState(() => isPermissionGranted = true);
       }
     } on PlatformException catch (e) {
-      debugPrint('Platform error during camera permission request: $e');
-      setState(() {
-        isPermissionGranted = false;
-      });
+      debugPrint('Error during bootstrap: $e');
+      setState(() => isPermissionGranted = false);
     }
   }
 
@@ -93,7 +98,7 @@ class _HomepageState extends State<Homepage> {
           ? SafeArea(child: CameraView())
           : Center(
               child: ElevatedButton(
-                onPressed: _requestPermission,
+                onPressed: _bootstrapPermissionsAndLogging,
                 child: const Text('Request Camera Permission'),
               ),
             ),
