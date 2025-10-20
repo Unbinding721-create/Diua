@@ -46,9 +46,14 @@ flutter {
 
 dependencies {
     implementation("com.google.mediapipe:tasks-vision:0.10.26")
-    implementation("androidx.camera:camera-core:1.4.2")
-    implementation("androidx.camera:camera-camera:1.4.2")
-    implementation("androidx.camera:camera-lifecycle:1.4.2")
-    implementation("androidx.camera:camera-view:1.4.2")
+    
+    
+    val cameraXVersion = "1.5.1"
+    
+    implementation("androidx.camera:camera-core:$cameraXVersion")
+    implementation("androidx.camera:camera-camera:$cameraXVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
+    implementation("androidx.camera:camera-view:$cameraXVersion")
+    
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
 }
