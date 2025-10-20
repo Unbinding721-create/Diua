@@ -2,7 +2,7 @@ android/build.gradle.kts (ROOT PROJECT FILE)
 
 plugins {
     // Defines the Android Gradle Plugin (AGP) version for all modules
-    id("com.android.application") version "8.1.4" apply false 
+    id("com.android.application") version "8.7.0" apply false 
     
     // Defines the Kotlin Gradle Plugin version for all modules
     id("org.jetbrains.kotlin.android") version "1.9.0" apply false // Use your Kotlin version
