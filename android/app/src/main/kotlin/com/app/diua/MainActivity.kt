@@ -20,13 +20,18 @@ class MainActivity : FlutterActivity(){
     private lateinit var debugChannel: MethodChannel
 
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults:
-        IntArray) {
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        // Ensure Flutter and plugins can also receive this callback
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionsGranted()) {
-                methodResult.success(true) 
-            } else {
-                methodResult.success(false) 
+            val granted = allPermissionsGranted()
+            // Guard against uninitialized result (e.g., activity recreation)
+            if (this::methodResult.isInitialized) {
+                methodResult.success(granted)
             }
         }
     }

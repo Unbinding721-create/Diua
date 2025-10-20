@@ -108,8 +108,10 @@ class GestureRecognizerHelper(
         val bitmapBuffer = Bitmap.createBitmap(
             imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888
         )
-        imageProxy.use { bitmapBuffer.copyPixelsFromBuffer(imageProxy.planes[0].buffer) }
-        imageProxy.close()
+        // Read from the first plane buffer; do not close here.
+        val planeBuffer = imageProxy.planes[0].buffer
+        planeBuffer.rewind()
+        bitmapBuffer.copyPixelsFromBuffer(planeBuffer)
 
         val matrix = Matrix().apply {
             // Rotate the frame received from the camera to be in the same direction as it'll be shown
