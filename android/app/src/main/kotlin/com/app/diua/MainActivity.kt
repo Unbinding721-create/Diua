@@ -17,6 +17,7 @@ class MainActivity : FlutterActivity(){
     private val REQUEST_CODE_PERMISSIONS = 10
     private val REQUIRED_PERMISSIONS = mutableListOf(Manifest.permission.CAMERA).toTypedArray()
     private lateinit var methodResult: MethodChannel.Result 
+    private lateinit var debugChannel: MethodChannel
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults:
@@ -47,7 +48,11 @@ class MainActivity : FlutterActivity(){
                 CameraViewFactory(this, messenger = flutterEngine.dartExecutor.binaryMessenger)
             )
 
-        
+        debugChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "diua_debug" // Use a unique channel name
+        )
+
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "camera_permission"
@@ -69,6 +74,13 @@ class MainActivity : FlutterActivity(){
             } else {
                 result.notImplemented()
             }
+        }
+    }
+    
+    fun sendDebugMessage(message: String) {
+        if (this::debugChannel.isInitialized) {
+            // Use invokeMethod on the debugChannel to send data to Dart
+            debugChannel.invokeMethod("debugMessage", message)
         }
     }
 }

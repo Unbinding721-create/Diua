@@ -196,9 +196,12 @@ class CameraView(
 
     override fun onError(error: String, errorCode: Int) { 
         Log.i("Erroris", error)
+        activity.sendDebugMessage("MP ERROR: $error (Code: $errorCode)")
     }
 
     override fun onResults(resultBundle: GestureRecognizerHelper.ResultBundle) { 
+        activity.sendDebugMessage("MP SUCCESS: Detected $handCount hand(s).")
+
         overlayView.setResults(
             resultBundle.results.first(),
             resultBundle.inputImageHeight,
