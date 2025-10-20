@@ -29,40 +29,32 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
-    _checkPermission();
+    _requestPermission();
   }
 
-  Future<void> _checkPermission() async {
+  Future<void> _requestPermission() async {
+    const methodName = 'getCameraPermission'; 
+    
     try {
       if (Platform.isAndroid) {
+        // Calling this will trigger the Kotlin code to check, and if needed, request permissions.
         final bool result =
-            await _cameraPermissionChannel.invokeMethod<bool>('checkCameraPermission') ?? false;
+            await _cameraPermissionChannel.invokeMethod<bool>(methodName) ?? false;
+        
         setState(() {
           isPermissionGranted = result;
         });
+
       } else {
-        // iOS or other platforms — assume true or implement platform checks
         setState(() {
           isPermissionGranted = true;
         });
       }
     } on PlatformException catch (e) {
-      debugPrint('Platform error while checking camera permission: $e');
+      debugPrint('Platform error during camera permission request: $e');
       setState(() {
         isPermissionGranted = false;
       });
-    }
-  }
-
-  Future<void> _requestPermission() async {
-    try {
-      final bool result =
-          await _cameraPermissionChannel.invokeMethod<bool>('requestCameraPermission') ?? false;
-      setState(() {
-        isPermissionGranted = result;
-      });
-    } on PlatformException catch (e) {
-      debugPrint('Platform error while requesting camera permission: $e');
     }
   }
 

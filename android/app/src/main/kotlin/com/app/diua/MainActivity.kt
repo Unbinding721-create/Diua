@@ -54,12 +54,18 @@ class MainActivity : FlutterActivity(){
         )
         .setMethodCallHandler { call: MethodCall, result: Result -> 
             methodResult = result
-            if (call.method == "getCameraPermission") {
-                ActivityCompat.requestPermissions(
-                    this, 
-                    REQUIRED_PERMISSIONS,
-                    REQUEST_CODE_PERMISSIONS
-                )
+            if (call.method == "getCameraPermission" || call.method == "requestCameraPermission") { 
+                // We'll treat any call as a request, or better, change Dart to use ONE name.
+                if (allPermissionsGranted()) {
+                    result.success(true) // Permission already granted, return true immediately
+                } else {
+                    // Permission not granted, proceed to request
+                    ActivityCompat.requestPermissions(
+                        this, 
+                        REQUIRED_PERMISSIONS,
+                        REQUEST_CODE_PERMISSIONS
+                    )
+                }
             } else {
                 result.notImplemented()
             }
