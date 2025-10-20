@@ -189,14 +189,13 @@ class CameraView(
     }
 
     private fun recognizeHand(imageProxy: ImageProxy) {
-        //  Use a try-finally block to ensure ImageProxy is always closed.
+        // Ensure ImageProxy is always closed to prevent buffer overflow crashes.
         try {
-            gestureRecognizerHelper.recognizeLiveStream(
-                imageProxy = imageProxy, 
-            )
+            if (this::gestureRecognizerHelper.isInitialized) {
+                gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
+            }
         } finally {
-            // This is mandatory for CameraX ImageAnalysis to prevent buffer overflow crashes.
-            imageProxy.close() 
+            imageProxy.close()
         }
     }
 
@@ -224,9 +223,9 @@ class CameraView(
         event: Lifecycle.Event
     ) {
         when (event) {
-            Lifecycle.Event.ON_RESUME -> { 
+            Lifecycle.Event.ON_RESUME -> {
                 backgroundExecutor.execute {
-                    if (gestureRecognizerHelper.isClosed()) {
+                    if (this::gestureRecognizerHelper.isInitialized && gestureRecognizerHelper.isClosed()) {
                         gestureRecognizerHelper.setupGestureRecognizer()
                     }
                 }
