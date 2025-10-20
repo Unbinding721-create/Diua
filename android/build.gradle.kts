@@ -5,7 +5,7 @@ plugins {
     id("com.android.application") version "8.7.0" apply false 
     
     // Defines the Kotlin Gradle Plugin version for all modules
-    id("org.jetbrains.kotlin.android") version "1.9.0" apply false // Use your Kotlin version
+    id("org.jetbrains.kotlin.android") version "1.8.22" apply false // Use your Kotlin version
 }
 
 // 2. Repositories (usually defined in settings.gradle.kts now, but OK here too)
