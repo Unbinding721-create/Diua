@@ -51,13 +51,16 @@ dependencies {
     // MediaPipe Dependency
     implementation("com.google.mediapipe:tasks-vision:0.10.26")
     
-    // CameraX Dependencies
-    val cameraXVersion = "1.5.1"
-    
-    implementation("androidx.camera:camera-core:$cameraXVersion")
-    implementation("androidx.camera:camera-camera:$cameraXVersion")
-    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
-    implementation("androidx.camera:camera-view:$cameraXVersion")
+    // CameraX core library using the camera2 implementation
+    val camerax_version = "1.5.1"
+    // The following line is optional, as the core library is included indirectly by camera-camera2
+    implementation("androidx.camera:camera-core:${camerax_version}")
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    // If you want to additionally use the CameraX Lifecycle library
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    // If you want to additionally use the CameraX View class
+    implementation("androidx.camera:camera-view:${camerax_version}")
+
 
     implementation("androidx.constraintlayout:constraintlayout:2.1.4") 
 }
