@@ -3,7 +3,7 @@
 
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-permission android:name="android.permission.CAMERA" />
-        <!-- Legacy external storage permissions for devices < Android 10 (API 29) -->
+    <!-- Legacy external storage permissions for devices < Android 10 (API 29) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 

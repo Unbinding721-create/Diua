@@ -61,6 +61,7 @@ class CameraView(
 
 
     init {
+        Log.i("DiuaCamera", "CameraView init start")
         val layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -97,6 +98,7 @@ class CameraView(
         constraintSet.applyTo(constraintLayout)
 
         backgroundExecutor.execute {
+            Log.i("DiuaCamera", "Background executor: creating GestureRecognizerHelper")
              gestureRecognizerHelper = GestureRecognizerHelper(
                  context = context,
                  runningMode = RunningMode.LIVE_STREAM,
@@ -108,6 +110,7 @@ class CameraView(
              )
 
              viewFinder.post {
+                Log.i("DiuaCamera", "Posting setUpCamera() on viewFinder")
                  setUpCamera()
              }
         }
@@ -123,6 +126,7 @@ class CameraView(
             ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener(
             {
+                Log.i("DiuaCamera", "CameraProviderFuture listener invoked")
                 cameraProvider = cameraProviderFuture.get()
                 Log.i("DiuaCamera", "CameraProvider received. Binding use cases.") // 💡 Log added
                 bindCameraUseCases()
@@ -136,6 +140,7 @@ class CameraView(
     }
 
     private fun bindCameraUseCases() {
+        Log.i("DiuaCamera", "bindCameraUseCases start")
 
         val aspectRatioStrategy = AspectRatioStrategy(
             AspectRatio.RATIO_16_9, AspectRatioStrategy.FALLBACK_RULE_NONE
@@ -146,7 +151,10 @@ class CameraView(
 
         val cameraProvider =
             cameraProvider
-                ?: throw IllegalStateException("Camera Initialization failed.")
+                ?: run {
+                    Log.e("DiuaCamera", "Camera Initialization failed: provider null")
+                    throw IllegalStateException("Camera Initialization failed.")
+                }
 
         val cameraSelector = 
             CameraSelector.Builder()
@@ -174,6 +182,7 @@ class CameraView(
         cameraProvider.unbindAll()
 
         try {
+            Log.i("DiuaCamera", "Binding to lifecycle")
             camera = cameraProvider.bindToLifecycle(
                 activity as LifecycleOwner,
                 cameraSelector,
@@ -184,13 +193,14 @@ class CameraView(
             preview?.surfaceProvider = viewFinder.surfaceProvider
             Log.i("DiuaCamera", "Camera bound and surface attached.") // 💡 Log added
         } catch (exc: Exception) {
-            Log.e("TAG", "Use case binding failed, lol", exc)
+            Log.e("DiuaCamera", "Use case binding failed", exc)
         }
     }
 
     private fun recognizeHand(imageProxy: ImageProxy) {
         // Ensure ImageProxy is always closed to prevent buffer overflow crashes.
         try {
+            Log.v("DiuaCamera", "Analyzer frame received: ${'$'}{imageProxy.width}x${'$'}{imageProxy.height}")
             if (this::gestureRecognizerHelper.isInitialized) {
                 gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
             }

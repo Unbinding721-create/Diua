@@ -45,6 +45,7 @@ class GestureRecognizerHelper(
     // that are created on the main thread and used on a background thread, but
     // the GPU delegate needs to be used on the thread that initialized the recognizer
     fun setupGestureRecognizer() {
+        Log.i(TAG, "setupGestureRecognizer start")
         // Set general recognition options, including number of used threads
         val baseOptionBuilder = BaseOptions.builder()
 
@@ -78,6 +79,7 @@ class GestureRecognizerHelper(
             val options = optionsBuilder.build()
             gestureRecognizer =
                 GestureRecognizer.createFromOptions(context, options)
+            Log.i(TAG, "GestureRecognizer created")
         } catch (e: IllegalStateException) {
             gestureRecognizerListener?.onError(
                 "Gesture recognizer failed to initialize. See error logs for " + "details"
@@ -102,6 +104,7 @@ class GestureRecognizerHelper(
     fun recognizeLiveStream(
         imageProxy: ImageProxy,
     ) {
+        Log.v(TAG, "recognizeLiveStream frame start ${'$'}{imageProxy.width}x${'$'}{imageProxy.height}")
         val frameTime = SystemClock.uptimeMillis()
 
         // Copy out RGB bits from the frame to a bitmap buffer
@@ -138,6 +141,7 @@ class GestureRecognizerHelper(
         val mpImage = BitmapImageBuilder(rotatedBitmap).build()
 
         recognizeAsync(mpImage, frameTime)
+        Log.v(TAG, "recognizeLiveStream frame queued")
     }
 
     // Run hand gesture recognition using MediaPipe Gesture Recognition API

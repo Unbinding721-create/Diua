@@ -12,9 +12,11 @@ class CameraView extends StatefulWidget {
 
 class _CameraViewState extends State<CameraView> {
     final Map<String, dynamic> creationParams = <String, dynamic>{};
+    static const MethodChannel _logging = MethodChannel('diua_logging');
 
     @override
     Widget build(BuildContext context) {
+        _logging.invokeMethod('writeLogLine', 'Flutter CameraView build');
         return Platform.isAndroid
             ? AndroidView(
                 viewType: 'camView',

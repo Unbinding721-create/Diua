@@ -57,11 +57,14 @@ class _HomepageState extends State<Homepage> {
   Future<void> _bootstrapPermissionsAndLogging() async {
     try {
       if (Platform.isAndroid) {
+        await _loggingChannel.invokeMethod('writeLogLine', 'Bootstrap start');
         // 1) Request storage permission first (no-op on Android 10+)
         await _loggingChannel.invokeMethod<bool>('requestStoragePermission');
+        await _loggingChannel.invokeMethod('writeLogLine', 'Storage permission step completed');
 
         // 2) Ask user where to put the log file (CreateDocument)
         final logUri = await _loggingChannel.invokeMethod<String>('pickLogFile');
+        await _loggingChannel.invokeMethod('writeLogLine', 'pickLogFile returned: ${logUri ?? 'null'}');
 
         if (logUri != null && logUri.isNotEmpty) {
           await _loggingChannel.invokeMethod('writeLogLine', 'Log file selected: $logUri');
@@ -69,8 +72,10 @@ class _HomepageState extends State<Homepage> {
 
         // 3) Now request camera permission
         const methodName = 'getCameraPermission';
+        await _loggingChannel.invokeMethod('writeLogLine', 'Requesting camera permission');
         final bool result =
             await _cameraPermissionChannel.invokeMethod<bool>(methodName) ?? false;
+        await _loggingChannel.invokeMethod('writeLogLine', 'Camera permission result: $result');
 
         setState(() {
           isPermissionGranted = result;
@@ -80,6 +85,7 @@ class _HomepageState extends State<Homepage> {
       }
     } on PlatformException catch (e) {
       debugPrint('Error during bootstrap: $e');
+      try { await _loggingChannel.invokeMethod('writeLogLine', 'Bootstrap PlatformException: $e'); } catch (_) {}
       setState(() => isPermissionGranted = false);
     }
   }
