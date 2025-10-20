@@ -1,4 +1,4 @@
-android/build.gradle.kts (ROOT PROJECT FILE)
+// android/build.gradle.kts (ROOT PROJECT FILE)
 
 plugins {
     // Defines the Android Gradle Plugin (AGP) version for all modules

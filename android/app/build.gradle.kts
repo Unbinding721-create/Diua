@@ -1,4 +1,4 @@
-//android/app/build.gradle.kts (APP MODULE FILE)
+// android/app/build.gradle.kts (APP MODULE FILE)
 
 plugins {
     id("com.android.application")
