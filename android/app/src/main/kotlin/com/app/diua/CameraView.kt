@@ -189,9 +189,15 @@ class CameraView(
     }
 
     private fun recognizeHand(imageProxy: ImageProxy) {
-        gestureRecognizerHelper.recognizeLiveStream(
-            imageProxy = imageProxy, 
-        )
+        //  Use a try-finally block to ensure ImageProxy is always closed.
+        try {
+            gestureRecognizerHelper.recognizeLiveStream(
+                imageProxy = imageProxy, 
+            )
+        } finally {
+            // This is mandatory for CameraX ImageAnalysis to prevent buffer overflow crashes.
+            imageProxy.close() 
+        }
     }
 
     override fun onError(error: String, errorCode: Int) { 
