@@ -38,6 +38,12 @@ class MainActivity : FlutterActivity(){
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Global uncaught exception handler to capture crashes in logs
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            appendLogLine("FATAL(${thread.name}): ${throwable.javaClass.simpleName}: ${throwable.message}")
+            appendLogLine(throwable.stackTrace.joinToString("\n") { it.toString() })
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -123,16 +129,21 @@ class MainActivity : FlutterActivity(){
         val messenger = flutterEngine.dartExecutor.binaryMessenger
 
         debugChannel = MethodChannel(messenger, "diua_debug")
+        appendLogLine("configureFlutterEngine: debug channel ready")
 
         // Logging channel: storage permission, pick file, write lines, query uri
         loggingChannel = MethodChannel(messenger, "diua_logging")
         loggingChannel.setMethodCallHandler { call: MethodCall, result: Result ->
+            appendLogLine("diua_logging call: ${call.method}")
             when (call.method) {
                 "requestStoragePermission" -> {
+                    appendLogLine("requestStoragePermission: checking")
                     if (allStoragePermissionsGranted()) {
+                        appendLogLine("requestStoragePermission: already granted")
                         result.success(true)
                     } else {
                         storagePermissionResult = result
+                        appendLogLine("requestStoragePermission: requesting")
                         ActivityCompat.requestPermissions(
                             this,
                             STORAGE_PERMISSIONS,
@@ -141,6 +152,7 @@ class MainActivity : FlutterActivity(){
                     }
                 }
                 "pickLogFile" -> {
+                    appendLogLine("pickLogFile: launching chooser")
                     pickLogFileResult = result
                     val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                         addCategory(Intent.CATEGORY_OPENABLE)
@@ -168,25 +180,31 @@ class MainActivity : FlutterActivity(){
                 }
                 "writeLogLine" -> {
                     val line = (call.arguments as? String) ?: ""
+                    appendLogLine("writeLogLine called")
                     val ok = appendLogLine(line)
                     result.success(ok)
                 }
                 "getLogUri" -> {
+                    appendLogLine("getLogUri")
                     result.success(prefs.getString("log_uri", null))
                 }
                 else -> result.notImplemented()
             }
         }
 
+        appendLogLine("configureFlutterEngine: camera_permission ready")
         MethodChannel(messenger, "camera_permission")
         .setMethodCallHandler { call: MethodCall, result: Result -> 
             methodResult = result
+            appendLogLine("camera_permission call: ${call.method}")
             if (call.method == "getCameraPermission" || call.method == "requestCameraPermission") { 
                 // We'll treat any call as a request, or better, change Dart to use ONE name.
                 if (allPermissionsGranted()) {
+                    appendLogLine("camera_permission: already granted")
                     result.success(true) // Permission already granted, return true immediately
                 } else {
                     // Permission not granted, proceed to request
+                    appendLogLine("camera_permission: requesting")
                     ActivityCompat.requestPermissions(
                         this, 
                         REQUIRED_PERMISSIONS,
