@@ -42,3 +42,13 @@ android {
 flutter {
     source = "../.."
 }
+
+
+dependencies {
+    implementation("com.google.mediapipe:tasks-vision:0.10.26")
+    implementation("androidx.camera:camera-core:1.4.2")
+    implementation("androidx.camera:camera-camera:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+    implementation("androidx.camera:camera-view:1.4.2")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+}
