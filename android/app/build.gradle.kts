@@ -1,12 +1,13 @@
+//android/app/build.gradle.kts (APP MODULE FILE)
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "com.app.diua"
+    namespace = "com.app.diua" 
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,14 +17,14 @@ android {
     }
 
     kotlinOptions {
+        // Must match the targetCompatibility above
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.app.diua"
+        
         // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,9 +33,12 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
+            // Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // Optional: for better performance
+            isShrinkResources = true
+            isMinifyEnabled = true
         }
     }
 }
@@ -43,17 +47,17 @@ flutter {
     source = "../.."
 }
 
-
 dependencies {
+    // MediaPipe Dependency
     implementation("com.google.mediapipe:tasks-vision:0.10.26")
     
-    
+    // CameraX Dependencies
     val cameraXVersion = "1.5.1"
     
     implementation("androidx.camera:camera-core:$cameraXVersion")
     implementation("androidx.camera:camera-camera:$cameraXVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
     implementation("androidx.camera:camera-view:$cameraXVersion")
-    
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4") 
 }
