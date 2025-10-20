@@ -31,12 +31,11 @@ import androidx.camera.core.ImageProxy
 
 // Fixed: The class must implement all abstract members of GestureRecognizerHelper.GestureRecognizerListener
 class CameraView(
-    context: Context,
+    private val context: Context,
     messenger: BinaryMessenger,
     id: Int,
     creationParams: Map<String?, Any?>?,
-    // Fixed: Parameters must have a type annotation and be separated by commas
-    private val activity: FlutterActivity // Assuming FlutterActivity is needed for lifecycle binding
+    private val activity: FlutterActivity
 ) : PlatformView, GestureRecognizerHelper.GestureRecognizerListener, LifecycleEventObserver {
 
     private var constraintLayout = ConstraintLayout(context) // Fixed: Use corrected ConstraintLayout class

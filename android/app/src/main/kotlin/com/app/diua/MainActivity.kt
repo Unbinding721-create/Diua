@@ -1,3 +1,5 @@
+// 🎯 android/app/src/main/kotlin/com/app/diua/MainActivity.kt 🎯
+
 package com.app.diua
 
 import io.flutter.embedding.android.FlutterActivity
@@ -8,30 +10,35 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.MethodCall 
 
 class MainActivity : FlutterActivity(){
     private val REQUEST_CODE_PERMISSIONS = 10
     private val REQUIRED_PERMISSIONS = mutableListOf(Manifest.permission.CAMERA).toTypedArray()
-    private lateinit var methodResult: MethodChannel.methodResult
+    private lateinit var methodResult: MethodChannel.Result 
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults:
         IntArray) {
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                methodResult.succes(true)
+                methodResult.success(true) 
             } else {
-                methodResult.succes(false)
+                methodResult.success(false) 
             }
         }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
-        baseContext, it) == PackageManager.PERMISSION_GRANTED
+            baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        // Must call super
+        super.configureFlutterEngine(flutterEngine) 
+
         flutterEngine
             .platformViewsController
             .registry
@@ -44,11 +51,12 @@ class MainActivity : FlutterActivity(){
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "camera_permission"
-        ).setMethodCallHandler { call, result —>
+        )
+        .setMethodCallHandler { call: MethodCall, result: Result -> 
             methodResult = result
             if (call.method == "getCameraPermission") {
                 ActivityCompat.requestPermissions(
-                    context as FlutterActivity,
+                    this, 
                     REQUIRED_PERMISSIONS,
                     REQUEST_CODE_PERMISSIONS
                 )
@@ -57,5 +65,4 @@ class MainActivity : FlutterActivity(){
             }
         }
     }
-    
 }
