@@ -197,7 +197,6 @@ class CameraView(
     override fun onError(error: String, errorCode: Int) { 
         Log.e("DiuaGesture", "MediaPipe Error: $error (Code: $errorCode)")
     (activity as MainActivity).sendDebugMessage("MP ERROR: $error (Code: $errorCode)")
-}
     }
 
     override fun onResults(resultBundle: GestureRecognizerHelper.ResultBundle) { 
