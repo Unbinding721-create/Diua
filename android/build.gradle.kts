@@ -1,7 +1,21 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
+    }
+    dependencies {
+        // Use a gradle plugin compatible with your Gradle wrapper; adjust version as needed
+        classpath 'com.android.tools.build:gradle:7.4.1'
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
+        maven { url 'https://dl.google.com/dl/android/maven2' }
     }
 }
 
