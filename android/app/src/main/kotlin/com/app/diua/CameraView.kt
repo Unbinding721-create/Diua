@@ -98,21 +98,21 @@ class CameraView(
         constraintSet.applyTo(constraintLayout)
 
         backgroundExecutor.execute {
-            Log.i("DiuaCamera", "Background executor: creating GestureRecognizerHelper")
-             gestureRecognizerHelper = GestureRecognizerHelper(
-                 context = context,
-                 runningMode = RunningMode.LIVE_STREAM,
-                 minHandDetectionConfidence = minHandDetectionConfidence,
-                 minHandTrackingConfidence = minHandTrackingConfidence,
-                 minHandPresenceConfidence = minHandPresenceConfidence,
-                 currentDelegate = delegate,
-                 gestureRecognizerListener = this
-             )
-
-             viewFinder.post {
-                Log.i("DiuaCamera", "Posting setUpCamera() on viewFinder")
-                 setUpCamera()
-             }
+            Log.i("DiuaCamera", "Background executor: scheduling init on main thread")
+            (activity).runOnUiThread {
+                Log.i("DiuaCamera", "Creating GestureRecognizerHelper on main thread")
+                gestureRecognizerHelper = GestureRecognizerHelper(
+                    context = context,
+                    runningMode = RunningMode.LIVE_STREAM,
+                    minHandDetectionConfidence = minHandDetectionConfidence,
+                    minHandTrackingConfidence = minHandTrackingConfidence,
+                    minHandPresenceConfidence = minHandPresenceConfidence,
+                    currentDelegate = delegate,
+                    gestureRecognizerListener = this
+                )
+                Log.i("DiuaCamera", "Calling setUpCamera() on main thread")
+                setUpCamera()
+            }
         }
     }
 
@@ -202,7 +202,10 @@ class CameraView(
         try {
             Log.v("DiuaCamera", "Analyzer frame received: ${'$'}{imageProxy.width}x${'$'}{imageProxy.height}")
             if (this::gestureRecognizerHelper.isInitialized) {
-                gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
+                // Ensure recognizer call happens on the main thread to avoid UiThread violations from Flutter JNI
+                (activity).runOnUiThread {
+                    gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
+                }
             }
         } finally {
             imageProxy.close()
