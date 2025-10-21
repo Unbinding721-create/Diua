@@ -170,7 +170,8 @@ class CameraView(
             ImageAnalysis.Builder()
                 .setResolutionSelector(resolutionSelector)
                 .setTargetRotation(viewFinder.display.rotation)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                // Use BLOCK_PRODUCER so we don't receive frames while prior frame is processing
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
                 .also {
@@ -201,7 +202,7 @@ class CameraView(
         // Ensure ImageProxy is always closed to prevent buffer overflow crashes.
         try {
             Log.v("DiuaCamera", "Analyzer frame received: ${'$'}{imageProxy.width}x${'$'}{imageProxy.height}")
-            if (this::gestureRecognizerHelper.isInitialized && !gestureRecognizerHelper.isClosed()) {
+            if (this::gestureRecognizerHelper.isInitialized && gestureRecognizerHelper.isOperational()) {
                 // Run recognition on the analyzer/background thread
                 gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
             }

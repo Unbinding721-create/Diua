@@ -55,7 +55,14 @@ class GestureRecognizerHelper(
                 baseOptionBuilder.setDelegate(Delegate.CPU)
             }
             DELEGATE_GPU -> {
-                baseOptionBuilder.setDelegate(Delegate.GPU)
+                // If GPU fails on device, fallback to CPU
+                try {
+                    baseOptionBuilder.setDelegate(Delegate.GPU)
+                } catch (t: Throwable) {
+                    Log.w(TAG, "GPU delegate not available, falling back to CPU")
+                    baseOptionBuilder.setDelegate(Delegate.CPU)
+                    currentDelegate = DELEGATE_CPU
+                }
             }
         }
 
@@ -97,6 +104,29 @@ class GestureRecognizerHelper(
                 TAG,
                 "MP Task Vision failed to load the task with error: " + e.message
             )
+            // Fallback: try CPU once if GPU was selected
+            if (currentDelegate == DELEGATE_GPU) {
+                try {
+                    currentDelegate = DELEGATE_CPU
+                    val cpuOptions = BaseOptions.builder().setDelegate(Delegate.CPU).setModelAssetPath(MP_RECOGNIZER_TASK).build()
+                    val optionsBuilder = GestureRecognizer.GestureRecognizerOptions.builder()
+                        .setBaseOptions(cpuOptions)
+                        .setMinHandDetectionConfidence(minHandDetectionConfidence)
+                        .setMinTrackingConfidence(minHandTrackingConfidence)
+                        .setMinHandPresenceConfidence(minHandPresenceConfidence)
+                        .setRunningMode(runningMode)
+                    if (runningMode == RunningMode.LIVE_STREAM) {
+                        optionsBuilder
+                            .setResultListener(this::returnLivestreamResult)
+                            .setErrorListener(this::returnLivestreamError)
+                    }
+                    val options = optionsBuilder.build()
+                    gestureRecognizer = GestureRecognizer.createFromOptions(context, options)
+                    Log.i(TAG, "GestureRecognizer created with CPU fallback")
+                } catch (ignored: Exception) {
+                    Log.e(TAG, "CPU fallback also failed: ${ignored.message}")
+                }
+            }
         }
     }
 
@@ -113,7 +143,7 @@ class GestureRecognizerHelper(
         )
         // Read from the first plane buffer if available
         val planeBuffer = imageProxy.planes.firstOrNull()?.buffer
-        if (planeBuffer == null) {
+        if (planeBuffer == null || !imageProxy.isValid) {
             Log.w(TAG, "No plane buffer available; skipping frame")
             return
         }
@@ -290,6 +320,11 @@ class GestureRecognizerHelper(
     // Return running status of the recognizer helper
     fun isClosed(): Boolean {
         return gestureRecognizer == null
+    }
+
+    // Whether the underlying recognizer is ready for inference
+    fun isOperational(): Boolean {
+        return gestureRecognizer != null
     }
 
     // Return the recognition result to the GestureRecognizerHelper's caller
