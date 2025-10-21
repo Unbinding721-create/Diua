@@ -201,11 +201,9 @@ class CameraView(
         // Ensure ImageProxy is always closed to prevent buffer overflow crashes.
         try {
             Log.v("DiuaCamera", "Analyzer frame received: ${'$'}{imageProxy.width}x${'$'}{imageProxy.height}")
-            if (this::gestureRecognizerHelper.isInitialized) {
-                // Ensure recognizer call happens on the main thread to avoid UiThread violations from Flutter JNI
-                (activity).runOnUiThread {
-                    gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
-                }
+            if (this::gestureRecognizerHelper.isInitialized && !gestureRecognizerHelper.isClosed()) {
+                // Run recognition on the analyzer/background thread
+                gestureRecognizerHelper.recognizeLiveStream(imageProxy = imageProxy)
             }
         } finally {
             imageProxy.close()
@@ -218,12 +216,17 @@ class CameraView(
     }
 
     override fun onResults(resultBundle: GestureRecognizerHelper.ResultBundle) { 
-        val handCount = resultBundle.results.first().handedness().size
+        if (resultBundle.results.isEmpty()) {
+            Log.v("DiuaGesture", "No results in frame")
+            return
+        }
+        val first = resultBundle.results.first()
+        val handCount = first.handedness().size
 
         (activity as MainActivity).sendDebugMessage("MP SUCCESS: Detected $handCount hand(s).")
 
         overlayView.setResults(
-            resultBundle.results.first(),
+            first,
             resultBundle.inputImageHeight,
             resultBundle.inputImageWidth,
             RunningMode.LIVE_STREAM
