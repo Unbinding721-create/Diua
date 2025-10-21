@@ -111,8 +111,12 @@ class GestureRecognizerHelper(
         val bitmapBuffer = Bitmap.createBitmap(
             imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888
         )
-        // Read from the first plane buffer; do not close here.
-        val planeBuffer = imageProxy.planes[0].buffer
+        // Read from the first plane buffer if available
+        val planeBuffer = imageProxy.planes.firstOrNull()?.buffer
+        if (planeBuffer == null) {
+            Log.w(TAG, "No plane buffer available; skipping frame")
+            return
+        }
         planeBuffer.rewind()
         bitmapBuffer.copyPixelsFromBuffer(planeBuffer)
 
