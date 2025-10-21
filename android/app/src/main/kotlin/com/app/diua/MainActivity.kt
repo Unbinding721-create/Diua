@@ -1,4 +1,4 @@
-// 🎯 android/app/src/main/kotlin/com/app/diua/MainActivity.kt 🎯
+// android/app/src/main/kotlin/com/app/diua/MainActivity.kt 
 
 package com.app.diua
 
