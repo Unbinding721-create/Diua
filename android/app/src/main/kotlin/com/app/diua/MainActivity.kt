@@ -1,4 +1,4 @@
-//  android/app/src/main/kotlin/com/app/diua/MainActivity.kt 
+// android/app/src/main/kotlin/com/app/diua/MainActivity.kt 
 
 package com.app.diua
 
@@ -218,11 +218,13 @@ class MainActivity : FlutterActivity(){
     }
     
     fun sendDebugMessage(message: String) {
-        if (this::debugChannel.isInitialized) {
-            // Use invokeMethod on the debugChannel to send data to Dart
-            debugChannel.invokeMethod("debugMessage", message)
-        }
         appendLogLine("DEBUG: $message")
+        if (this::debugChannel.isInitialized) {
+            // Ensure we call into Flutter on the main thread
+            runOnUiThread {
+                debugChannel.invokeMethod("debugMessage", message)
+            }
+        }
     }
 
     private fun appendLogLine(line: String): Boolean {
